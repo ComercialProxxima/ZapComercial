@@ -1,5 +1,6 @@
 import { ChatMessage } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface MessageProps {
   message: ChatMessage;
@@ -36,18 +37,22 @@ export default function Message({ message, isCurrentUser }: MessageProps) {
       ) : (
         <div className={cn(
           "max-w-[80%] rounded-lg px-3 py-2 shadow-sm",
-          isCurrentUser ? "bg-chat-sent" : "bg-chat-received"
+          isCurrentUser ? "bg-chat-sent" : "bg-chat-received",
+          isCurrentUser ? "rounded-tr-none" : "rounded-tl-none"
         )}>
           {!isCurrentUser && (
-            <div className="font-medium text-xs text-whatsapp-green">
+            <div className="font-medium text-xs text-primary">
               {message.username}
             </div>
           )}
           <div className="text-gray-800 break-words">
             {message.text}
           </div>
-          <div className="text-right text-xs text-gray-500">
-            {formattedTime}
+          <div className="flex items-center justify-end space-x-1 text-xs text-gray-500">
+            <span>{formattedTime}</span>
+            {isCurrentUser && (
+              <Check size={14} className="text-primary" />
+            )}
           </div>
         </div>
       )}

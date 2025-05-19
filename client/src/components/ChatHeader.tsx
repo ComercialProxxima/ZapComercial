@@ -1,41 +1,74 @@
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { MoreVertical, Search, Phone, Video } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface ChatHeaderProps {
   username: string;
   onlineCount: number;
   onLogout: () => void;
+  chatName?: string;
 }
 
-export default function ChatHeader({ username, onlineCount, onLogout }: ChatHeaderProps) {
+export default function ChatHeader({ username, onlineCount, onLogout, chatName = "Chat Público" }: ChatHeaderProps) {
   return (
-    <header className="bg-whatsapp-teal text-white py-3 px-4 shadow-md flex items-center justify-between">
+    <header className="bg-secondary text-white py-3 px-4 shadow-md flex items-center justify-between">
       <div className="flex items-center">
-        <div 
-          className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-whatsapp-teal font-semibold mr-3"
-          aria-label={`Avatar de ${username}`}
-        >
-          {username.charAt(0).toUpperCase()}
-        </div>
+        <Avatar className="h-10 w-10 mr-3">
+          <AvatarFallback className="bg-secondary-foreground">
+            {chatName.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <div>
-          <h1 className="font-semibold">Chat Público</h1>
-          <div className="flex items-center text-xs">
-            <span className="w-2 h-2 bg-whatsapp-light rounded-full mr-1"></span>
+          <h1 className="font-semibold">{chatName}</h1>
+          <div className="flex items-center text-xs text-white/80">
+            <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
             <span>{onlineCount} {onlineCount === 1 ? 'usuário online' : 'usuários online'}</span>
           </div>
         </div>
       </div>
       
-      <Button 
-        variant="ghost"
-        size="icon"
-        onClick={onLogout}
-        className="text-white hover:bg-whatsapp-teal hover:text-white"
-        aria-label="Sair do chat"
-        title="Sair do chat"
-      >
-        <LogOut size={20} />
-      </Button>
+      <div className="flex items-center space-x-2">
+        <Button 
+          variant="ghost"
+          size="icon"
+          className="text-white hover:bg-secondary/80"
+          aria-label="Chamada de vídeo"
+          title="Chamada de vídeo"
+        >
+          <Video size={18} />
+        </Button>
+        
+        <Button 
+          variant="ghost"
+          size="icon"
+          className="text-white hover:bg-secondary/80"
+          aria-label="Chamada de voz"
+          title="Chamada de voz"
+        >
+          <Phone size={18} />
+        </Button>
+        
+        <Button 
+          variant="ghost"
+          size="icon"
+          className="text-white hover:bg-secondary/80"
+          aria-label="Pesquisar na conversa"
+          title="Pesquisar na conversa"
+        >
+          <Search size={18} />
+        </Button>
+        
+        <Button 
+          variant="ghost"
+          size="icon"
+          onClick={onLogout}
+          className="text-white hover:bg-secondary/80"
+          aria-label="Mais opções"
+          title="Mais opções"
+        >
+          <MoreVertical size={18} />
+        </Button>
+      </div>
     </header>
   );
 }
