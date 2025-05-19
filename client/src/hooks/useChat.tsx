@@ -52,11 +52,22 @@ export function useChat(user: User) {
           // Solicitar lista de usuários
           setTimeout(() => {
             if (newSocket.readyState === WebSocket.OPEN) {
+              console.log("Solicitando lista de usuários...");
               newSocket.send(JSON.stringify({
                 type: 'getUsers'
               }));
             }
-          }, 500);
+          }, 1000);
+          
+          // Configurar um intervalo para solicitar a lista periodicamente
+          const usersInterval = setInterval(() => {
+            if (newSocket.readyState === WebSocket.OPEN) {
+              console.log("Atualizando lista de usuários...");
+              newSocket.send(JSON.stringify({
+                type: 'getUsers'
+              }));
+            }
+          }, 5000);
           
           // Limpar qualquer timeout de reconexão
           if (reconnectTimeoutRef.current) {
@@ -98,6 +109,7 @@ export function useChat(user: User) {
             
             case 'usersList': {
               // Atualizar lista de contatos
+              console.log("Recebendo lista de usuários:", data.users);
               setContacts(data.users || []);
               break;
             }

@@ -86,7 +86,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       users: onlineUsers
     };
     
-    broadcast(message);
+    console.log(`Enviando lista de ${onlineUsers.length} usuários:`, onlineUsers);
+    
+    // Enviar para cada cliente individualmente para garantir entrega
+    wss.clients.forEach((client: ExtendedWebSocket) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
   }
 
   // Heartbeat para manter conexões ativas
@@ -205,7 +212,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'getUsers': {
             // Enviar a lista de usuários apenas para quem solicitou
             if (ws.readyState === WebSocket.OPEN) {
-              updateOnlineUsersList();
+              const onlineUsers: ChatContact[] = [];
+              
+              // Criar a lista de usuários online
+              clients.forEach((client, userId) => {
+                if (client.username) {
+                  onlineUsers.push({
+                    id: userId,
+                    username: client.username,
+                    connected: true
+                  });
+                }
+              });
+              
+              // Adicionar o chat público como primeiro item
+              onlineUsers.unshift({
+                id: 0,
+                username: 'Chat Público',
+                connected: true
+              });
+              
+              // Enviar diretamente para este cliente
+              ws.send(JSON.stringify({
+                type: 'usersList',
+                users: onlineUsers
+              }));
+              
+              console.log(`Enviando lista direta de ${onlineUsers.length} usuários para o cliente`);
             }
             break;
           }
