@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
@@ -84,33 +84,43 @@ export default function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="bg-chat-bg min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-semibold text-whatsapp-green mb-2">WhatsApp Web Clone</h1>
-            <p className="text-gray-600">Digite um nome de usuário para entrar no chat</p>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                Nome de usuário
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: "linear-gradient(135deg, #D22887 0%, #2B3491 100%)",
+      }}
+    >
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            WhatsApp Web Clone
+          </CardTitle>
+          <CardDescription className="text-lg">
+            Entre com seu nome para começar a conversar
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-medium">
+                Seu nome
               </Label>
               <Input
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Digite seu nome"
+                placeholder="Digite seu nome para entrar"
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-whatsapp-green focus:border-transparent"
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 disabled={isLoggingIn}
+                autoFocus
               />
             </div>
             <Button 
               type="submit" 
-              className="w-full bg-whatsapp-green hover:bg-whatsapp-teal text-white" 
+              className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-lg font-medium" 
               disabled={isLoggingIn}
+              size="lg"
             >
               {isLoggingIn ? "Entrando..." : "Entrar no Chat"}
             </Button>
