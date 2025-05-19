@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { Send, Smile, Paperclip, Mic } from "lucide-react";
+import { Send, Smile, Paperclip } from "lucide-react";
 
 interface MessageFormProps {
   onSendMessage: (text: string) => void;
@@ -52,26 +52,14 @@ export default function MessageForm({ onSendMessage, disabled = false }: Message
           className="flex-1 py-2 px-4 bg-chat-bg rounded-full focus:outline-none focus:ring-1 focus:ring-primary"
         />
         
-        {message.trim() ? (
-          <Button
-            type="submit"
-            disabled={!message.trim() || disabled}
-            className="ml-2 bg-primary text-white rounded-full p-2 hover:bg-primary/90 transition duration-200 h-10 w-10 flex items-center justify-center"
-            aria-label="Enviar mensagem"
-          >
-            <Send size={18} />
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="ml-2 text-gray-500 hover:text-primary"
-            aria-label="Áudio"
-          >
-            <Mic size={22} />
-          </Button>
-        )}
+        <Button
+          type="submit"
+          disabled={!message.trim() || disabled}
+          className="ml-2 bg-primary text-white rounded-full p-2 hover:bg-primary/90 transition duration-200 h-10 w-10 flex items-center justify-center"
+          aria-label="Enviar mensagem"
+        >
+          <Send size={18} />
+        </Button>
       </form>
     </div>
   );

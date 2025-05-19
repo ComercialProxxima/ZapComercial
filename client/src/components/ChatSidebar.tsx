@@ -4,18 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-
-interface ChatContact {
-  id: number;
-  name: string;
-  lastMessage?: string;
-  timestamp?: string;
-  unread?: number;
-}
+import { ChatContact } from "@shared/schema";
 
 interface ChatSidebarProps {
   currentUserId: number;
-  currentChat?: number;
+  currentChat: number;
+  contacts: ChatContact[];
   onSelectChat: (chatId: number) => void;
   onNewChat: () => void;
   onLogout: () => void;
@@ -24,51 +18,23 @@ interface ChatSidebarProps {
 export default function ChatSidebar({ 
   currentUserId, 
   currentChat, 
+  contacts,
   onSelectChat, 
   onNewChat,
   onLogout 
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Mock data para demonstração - em uma aplicação real, isso viria da API
-  const mockContacts: ChatContact[] = [
-    { 
-      id: 0, // Chat público
-      name: "Chat Público", 
-      lastMessage: "Mensagens do chat público", 
-      timestamp: "10:13" 
-    },
-    { 
-      id: 1, 
-      name: "+55 18 9122-8455", 
-      lastMessage: "Tudo bem entendi, grata.", 
-      timestamp: "10:13" 
-    },
-    { 
-      id: 2, 
-      name: "+55 41 8192-8255", 
-      lastMessage: "Olá estou no site preciso de ajuda", 
-      timestamp: "10:13" 
-    },
-    { 
-      id: 3, 
-      name: "+55 87 9182-8957", 
-      lastMessage: "Qual o prazo de entrega?", 
-      timestamp: "10:13" 
-    },
-    { 
-      id: 4, 
-      name: "+55 11 9187-9875", 
-      lastMessage: "Gostaria de saber sobre meu pedido", 
-      timestamp: "10:13" 
-    },
-  ];
-  
   // Filtrar contatos com base na busca
-  const filteredContacts = mockContacts.filter(contact => 
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (contact.lastMessage && contact.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredContacts = contacts.filter(contact => 
+    contact.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Função para formatar a data atual para exibição (apenas para demonstração)
+  const formatCurrentTime = () => {
+    const now = new Date();
+    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="h-full flex flex-col bg-sidebar-bg border-r">
@@ -77,7 +43,7 @@ export default function ChatSidebar({
         <div className="flex items-center">
           <Avatar className="h-10 w-10 bg-secondary-foreground text-white cursor-pointer" onClick={onLogout}>
             <AvatarFallback>
-              {currentUserId.toString()[0]}
+              {currentUserId.toString().charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -111,18 +77,33 @@ export default function ChatSidebar({
             )}
           >
             <Avatar className="h-12 w-12 mr-3">
-              <AvatarFallback className="bg-primary text-white">
-                {contact.name.charAt(0)}
+              <AvatarFallback className={cn(
+                "text-white",
+                contact.id === 0 ? "bg-secondary" : "bg-primary" 
+              )}>
+                {contact.username.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-baseline">
-                <h3 className="font-medium text-sm text-gray-900 truncate">{contact.name}</h3>
-                <span className="text-xs text-gray-500">{contact.timestamp}</span>
+                <h3 className="font-medium text-sm text-gray-900 truncate">
+                  {contact.username}
+                  {contact.id === currentUserId && " (Você)"}
+                </h3>
+                <span className="text-xs text-gray-500">{formatCurrentTime()}</span>
               </div>
-              {contact.lastMessage && (
-                <p className="text-sm text-gray-500 truncate">{contact.lastMessage}</p>
-              )}
+              <div className="flex items-center">
+                {contact.connected && (
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                )}
+                <p className="text-xs text-gray-500">
+                  {contact.id === 0 
+                    ? "Chat público para todos os usuários" 
+                    : contact.connected 
+                      ? "Online"
+                      : "Offline"}
+                </p>
+              </div>
             </div>
           </div>
         ))}

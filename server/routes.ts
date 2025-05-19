@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { WebSocketServer } from "ws";
 import { WebSocket } from "ws";
-import { insertMessageSchema, insertUserSchema, ChatMessage } from "@shared/schema";
+import { insertMessageSchema, insertUserSchema, ChatMessage, ChatContact } from "@shared/schema";
 
 interface ExtendedWebSocket extends WebSocket {
   isAlive?: boolean;
@@ -29,9 +29,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WebSocket server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
+  // Armazenar clientes conectados por userId
   const clients = new Map<number, ExtendedWebSocket>();
 
-  // Broadcast to all connected clients
+  // Broadcast para todos os clientes conectados
   function broadcast(message: any, excludeClient?: ExtendedWebSocket) {
     const data = JSON.stringify(message);
     
@@ -42,25 +43,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }
 
-  // Send online users count to all clients
-  function updateOnlineUsers() {
-    const onlineCount = clients.size;
+  // Enviar mensagem privada para um cliente específico
+  function sendPrivateMessage(message: any, targetUserId: number, senderSocket: ExtendedWebSocket) {
+    const targetClient = clients.get(targetUserId);
+    
+    if (targetClient && targetClient.readyState === WebSocket.OPEN) {
+      targetClient.send(JSON.stringify(message));
+      // Também enviar de volta para o remetente
+      if (senderSocket && senderSocket.readyState === WebSocket.OPEN) {
+        senderSocket.send(JSON.stringify(message));
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Enviar lista de usuários online para todos os clientes
+  function updateOnlineUsersList() {
+    const onlineUsers: ChatContact[] = [];
+    
+    // Criar a lista de usuários online
+    clients.forEach((client, userId) => {
+      if (client.username) {
+        onlineUsers.push({
+          id: userId,
+          username: client.username,
+          connected: true
+        });
+      }
+    });
+    
+    // Adicionar o chat público como primeiro item
+    onlineUsers.unshift({
+      id: 0,
+      username: 'Chat Público',
+      connected: true
+    });
+    
+    // Enviar para todos os clientes
     const message = {
-      type: 'users',
-      count: onlineCount
+      type: 'usersList',
+      users: onlineUsers
     };
+    
     broadcast(message);
   }
 
-  // Heartbeat to keep connections alive
+  // Heartbeat para manter conexões ativas
   const pingInterval = setInterval(() => {
     wss.clients.forEach((client: ExtendedWebSocket) => {
       if (client.isAlive === false) {
-        // User disconnected without proper close
+        // Usuário desconectado sem fechar adequadamente
         if (client.userId) {
           clients.delete(client.userId);
           broadcastSystemMessage(`${client.username} saiu do chat.`);
-          updateOnlineUsers();
+          updateOnlineUsersList();
         }
         return client.terminate();
       }
@@ -70,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }, 30000);
 
-  // Helper to broadcast system messages
+  // Enviar mensagem do sistema
   function broadcastSystemMessage(text: string) {
     const systemMessage: ChatMessage = {
       text,
@@ -79,42 +116,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       isSystem: true
     };
     
-    broadcast({ type: 'message', data: systemMessage });
+    broadcast({ type: 'message', data: systemMessage, chatId: 0 });
   }
 
-  // WebSocket connection handler
+  // Tratamento de conexão WebSocket
   wss.on('connection', (ws: ExtendedWebSocket) => {
     ws.isAlive = true;
 
-    // Handle pong responses
+    // Tratamento de respostas pong
     ws.on('pong', () => {
       ws.isAlive = true;
     });
 
-    // Message handling
+    // Tratamento de mensagens
     ws.on('message', async (rawData) => {
       try {
         const message = JSON.parse(rawData.toString());
         
         switch (message.type) {
           case 'login': {
-            // Store user
+            // Armazenar usuário
             const user = await storage.createUser({ username: message.username });
             ws.userId = user.id;
             ws.username = user.username;
             clients.set(user.id, ws);
             
-            // Notify about new user
+            // Notificar sobre novo usuário
             broadcastSystemMessage(`${user.username} entrou no chat.`);
             
-            // Send confirmation to the user
+            // Enviar confirmação para o usuário
             ws.send(JSON.stringify({ 
               type: 'login_success', 
               userId: user.id,
               username: user.username
             }));
             
-            updateOnlineUsers();
+            // Atualizar lista de usuários online
+            updateOnlineUsersList();
             break;
           }
           
@@ -127,15 +165,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return;
             }
             
-            // Process and store the message
+            const receiverId = message.receiverId || 0; // 0 para chat público
+            
+            // Criar objeto de mensagem
             const newMessage: ChatMessage = {
               text: message.text,
               username: ws.username,
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              senderId: ws.userId,
+              receiverId: receiverId
             };
             
-            // Broadcast the message to all connected clients
-            broadcast({ type: 'message', data: newMessage });
+            if (receiverId === 0) {
+              // Mensagem pública - enviar para todos
+              broadcast({ 
+                type: 'message', 
+                data: newMessage,
+                chatId: 0 
+              });
+            } else {
+              // Mensagem privada - enviar apenas para o destinatário e o remetente
+              const sent = sendPrivateMessage({ 
+                type: 'message', 
+                data: newMessage,
+                chatId: receiverId === ws.userId ? ws.userId : receiverId
+              }, receiverId, ws);
+              
+              if (!sent) {
+                // Se o destinatário não estiver online
+                ws.send(JSON.stringify({ 
+                  type: 'error', 
+                  message: 'Usuário não está online no momento.' 
+                }));
+              }
+            }
+            break;
+          }
+          
+          case 'getUsers': {
+            // Enviar a lista de usuários apenas para quem solicitou
+            if (ws.readyState === WebSocket.OPEN) {
+              updateOnlineUsersList();
+            }
             break;
           }
         }
@@ -148,17 +219,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
-    // Handle disconnection
+    // Tratamento de desconexão
     ws.on('close', () => {
       if (ws.userId) {
         clients.delete(ws.userId);
         broadcastSystemMessage(`${ws.username} saiu do chat.`);
-        updateOnlineUsers();
+        updateOnlineUsersList();
       }
     });
   });
 
-  // Clean up on server shutdown
+  // Limpeza na desativação do servidor
   wss.on('close', () => {
     clearInterval(pingInterval);
   });
