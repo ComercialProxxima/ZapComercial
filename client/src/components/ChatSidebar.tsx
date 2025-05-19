@@ -31,13 +31,19 @@ export default function ChatSidebar({
     contact.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Debug
+  console.log("Contatos recebidos:", contacts);
+  
   // Separar os contatos em grupos
   const groupedContacts = useMemo(() => {
+    console.log("Processando contatos:", filteredContacts);
+    
     // Chat público sempre em primeiro
     const publicChat = filteredContacts.find(c => c.id === 0);
     
     // Todos os usuários (exceto chat público)
-    const userContacts = filteredContacts.filter(c => c.id !== 0 && c.id !== currentUserId)
+    const userContacts = filteredContacts
+      .filter(c => c.id !== 0 && c.id !== currentUserId)
       .sort((a, b) => {
         // Usuários conectados primeiro
         if (a.connected !== b.connected) {
@@ -49,6 +55,12 @@ export default function ChatSidebar({
     
     // O usuário atual (você)
     const currentUser = filteredContacts.find(c => c.id === currentUserId);
+    
+    console.log("Contatos agrupados:", {
+      publicChat,
+      userContacts: userContacts.length,
+      currentUser
+    });
     
     return {
       publicChat,
