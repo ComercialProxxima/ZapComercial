@@ -20,10 +20,18 @@ export default function ChatHeader({ username, onlineCount, onLogout, chatName =
         </Avatar>
         <div>
           <h1 className="font-semibold">{chatName}</h1>
-          <div className="flex items-center text-xs text-white/80">
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
-            <span>{onlineCount} {onlineCount === 1 ? 'usuário online' : 'usuários online'}</span>
-          </div>
+          {chatName === "Chat Público" && (
+            <div className="flex items-center text-xs text-white/80">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+              <span>{onlineCount} {onlineCount === 1 ? 'usuário online' : 'usuários online'}</span>
+            </div>
+          )}
+          {chatName !== "Chat Público" && (
+            <div className="flex items-center text-xs text-white/80">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+              <span>Online</span>
+            </div>
+          )}
         </div>
       </div>
       
