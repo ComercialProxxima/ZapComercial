@@ -41,9 +41,23 @@ export default function ChatSidebar({
     // Chat público sempre em primeiro
     const publicChat = filteredContacts.find(c => c.id === 0);
     
+    // Cria um Set para garantir que não teremos usernames duplicados na lista
+    // Exceção para o usuário atual e chat público
+    const uniqueUsernames = new Set<string>();
+    
     // Todos os usuários (exceto chat público)
     const userContacts = filteredContacts
-      .filter(c => c.id !== 0 && c.id !== currentUserId)
+      .filter(c => {
+        // Ignorar chat público e o usuário atual
+        if (c.id === 0 || c.id === currentUserId) return false;
+        
+        // Verificar se o username já foi adicionado
+        if (uniqueUsernames.has(c.username)) return false;
+        
+        // Adicionar o username ao Set e incluir o contato
+        uniqueUsernames.add(c.username);
+        return true;
+      })
       .sort((a, b) => {
         // Usuários conectados primeiro
         if (a.connected !== b.connected) {

@@ -25,9 +25,9 @@ export function useChat(user: User) {
     return allMessages[activeChatId] || [];
   }, [allMessages, activeChatId]);
 
-  // Número de usuários online
+  // Número de usuários online (excluindo o chat público)
   const onlineUsers = useMemo(() => {
-    return contacts.length;
+    return contacts.filter(c => c.id !== 0).length;
   }, [contacts]);
 
   // Conectar ao WebSocket
@@ -110,7 +110,26 @@ export function useChat(user: User) {
             case 'usersList': {
               // Atualizar lista de contatos
               console.log("Recebendo lista de usuários:", data.users);
-              setContacts(data.users || []);
+              
+              // Deduplica usuários pelo nome (mantendo o primeiro encontrado)
+              const uniqueUsersByName = new Map<string, ChatContact>();
+              
+              // Primeiro garantimos que o Chat Público esteja incluído
+              const publicChat = data.users.find((u: ChatContact) => u.id === 0);
+              if (publicChat) {
+                uniqueUsersByName.set(publicChat.username, publicChat);
+              }
+              
+              // Adicionar outros usuários, evitando duplicação por nome
+              data.users.forEach((contact: ChatContact) => {
+                if (contact.id !== 0 && !uniqueUsersByName.has(contact.username)) {
+                  uniqueUsersByName.set(contact.username, contact);
+                }
+              });
+              
+              // Converter Map de volta para array
+              const uniqueContacts = Array.from(uniqueUsersByName.values());
+              setContacts(uniqueContacts || []);
               break;
             }
             
