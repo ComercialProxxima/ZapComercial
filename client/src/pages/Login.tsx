@@ -93,10 +93,10 @@ export default function Login({ onLogin }: LoginProps) {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            WhatsApp Web Clone
+            ZapComercial
           </CardTitle>
           <CardDescription className="text-lg">
-            Entre com seu nome para começar a conversar
+            Informe seu nome para entrar
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
