@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Search, Phone, Video } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { LogOut } from "lucide-react";
 
 interface ChatHeaderProps {
   username: string;
@@ -70,11 +71,12 @@ export default function ChatHeader({ username, onlineCount, onLogout, chatName =
           variant="ghost"
           size="icon"
           onClick={onLogout}
-          className="text-white hover:bg-secondary/80"
-          aria-label="Mais opções"
-          title="Mais opções"
+          className="text-white hover:bg-secondary/80 py-1 px-3"
+          aria-label="Sair do chat"
+          title="Sair do chat"
         >
-          <MoreVertical size={18} />
+          <LogOut size={18} />
+          Sair
         </Button>
       </div>
     </header>
