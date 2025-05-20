@@ -36,37 +36,8 @@ export default function ChatHeader({ username, onlineCount, onLogout, chatName =
         </div>
       </div>
       
-      <div className="flex items-center space-x-2">
-        <Button 
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-secondary/80"
-          aria-label="Chamada de vídeo"
-          title="Chamada de vídeo"
-        >
-          <Video size={18} />
-        </Button>
-        
-        <Button 
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-secondary/80"
-          aria-label="Chamada de voz"
-          title="Chamada de voz"
-        >
-          <Phone size={18} />
-        </Button>
-        
-        <Button 
-          variant="ghost"
-          size="icon"
-          className="text-white hover:bg-secondary/80"
-          aria-label="Pesquisar na conversa"
-          title="Pesquisar na conversa"
-        >
-          <Search size={18} />
-        </Button>
-        
+      <div className="flex items-center">        
+                
         <Button 
           variant="ghost"
           size="icon"
