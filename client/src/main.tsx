@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-document.title = "WhatsApp Web Clone";
+document.title = "ZapComercial";
 
 // Add meta description for SEO
 const metaDescription = document.createElement("meta");
@@ -13,7 +13,7 @@ document.head.appendChild(metaDescription);
 // Add Open Graph tags for better social sharing
 const ogTitle = document.createElement("meta");
 ogTitle.property = "og:title";
-ogTitle.content = "WhatsApp Web Clone - Chat em Tempo Real";
+ogTitle.content = "ZapComercial - Chat em Tempo Real";
 document.head.appendChild(ogTitle);
 
 const ogDescription = document.createElement("meta");
