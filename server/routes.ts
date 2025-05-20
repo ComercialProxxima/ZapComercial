@@ -60,24 +60,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enviar lista de usuários online para todos os clientes
   function updateOnlineUsersList() {
-    const onlineUsers: ChatContact[] = [];
+    // Cria um Map para armazenar usuários únicos por nome
+    const uniqueUsersByName = new Map<string, ChatContact>();
     
-    // Criar a lista de usuários online
+    // Adicionar o chat público como primeiro item
+    uniqueUsersByName.set('Chat Público', {
+      id: 0,
+      username: 'Chat Público',
+      connected: true
+    });
+    
+    // Mapear conexões para nomes de usuários únicos
+    // Mantém apenas a conexão mais recente para cada nome de usuário
     clients.forEach((client, userId) => {
-      if (client.username) {
-        onlineUsers.push({
+      if (client.username && client.username !== 'Chat Público') {
+        uniqueUsersByName.set(client.username, {
           id: userId,
-          username: client.username,
+          username: client.username, 
           connected: true
         });
       }
     });
     
-    // Adicionar o chat público como primeiro item
-    onlineUsers.unshift({
-      id: 0,
-      username: 'Chat Público',
-      connected: true
+    // Converter Map para array
+    const onlineUsers = Array.from(uniqueUsersByName.values());
+    
+    // Ordenar para garantir que Chat Público esteja primeiro
+    onlineUsers.sort((a, b) => {
+      if (a.id === 0) return -1;
+      if (b.id === 0) return 1;
+      return a.username.localeCompare(b.username);
     });
     
     // Enviar para todos os clientes
@@ -86,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       users: onlineUsers
     };
     
-    console.log(`Enviando lista de ${onlineUsers.length} usuários:`, onlineUsers);
+    console.log(`Enviando lista de ${onlineUsers.length} usuários únicos por nome`);
     
     // Enviar para cada cliente individualmente para garantir entrega
     wss.clients.forEach((client: ExtendedWebSocket) => {
@@ -212,24 +224,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'getUsers': {
             // Enviar a lista de usuários apenas para quem solicitou
             if (ws.readyState === WebSocket.OPEN) {
-              const onlineUsers: ChatContact[] = [];
-              
-              // Criar a lista de usuários online
-              clients.forEach((client, userId) => {
-                if (client.username) {
-                  onlineUsers.push({
-                    id: userId,
-                    username: client.username,
-                    connected: true
-                  });
-                }
-              });
+              // Usar um Map para armazenar usuários únicos por nome de usuário
+              const uniqueUsersByName = new Map<string, ChatContact>();
               
               // Adicionar o chat público como primeiro item
-              onlineUsers.unshift({
+              uniqueUsersByName.set('Chat Público', {
                 id: 0,
                 username: 'Chat Público',
                 connected: true
+              });
+              
+              // Adicionar usuários únicos por nome
+              clients.forEach((client, userId) => {
+                if (client.username && client.username !== 'Chat Público') {
+                  // Se este nome de usuário já existe, não adiciona novamente
+                  if (!uniqueUsersByName.has(client.username)) {
+                    uniqueUsersByName.set(client.username, {
+                      id: userId,
+                      username: client.username,
+                      connected: true
+                    });
+                  }
+                }
+              });
+              
+              // Converter Map para array
+              const onlineUsers = Array.from(uniqueUsersByName.values());
+              
+              // Ordenar: Chat Público primeiro, depois usuários por ordem alfabética
+              onlineUsers.sort((a, b) => {
+                if (a.id === 0) return -1;
+                if (b.id === 0) return 1;
+                return a.username.localeCompare(b.username);
               });
               
               // Enviar diretamente para este cliente
@@ -238,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 users: onlineUsers
               }));
               
-              console.log(`Enviando lista direta de ${onlineUsers.length} usuários para o cliente`);
+              console.log(`Enviando lista de ${onlineUsers.length} usuários únicos por nome`);
             }
             break;
           }
